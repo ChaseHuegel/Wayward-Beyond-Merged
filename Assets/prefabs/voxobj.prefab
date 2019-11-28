@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8120304655936841785
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8120304655936841790}
+  - component: {fileID: 8120304655936841791}
+  - component: {fileID: 8120304655936841788}
+  m_Layer: 0
+  m_Name: voxobj
+  m_TagString: Voxel
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8120304655936841790
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8120304655936841785}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8120304655936841791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8120304655936841785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25ee658a02ba22c488f66e4a4d8a7629, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  voxelObject:
+    component: {fileID: 0}
+    ticksAlive: 0
+    chunkSizeX: 0
+    chunkSizeZ: 0
+    chunkSizeY: 0
+    loaded: 0
+    unloadedChunks: 0
+  pivotPoint: {x: -16.5, y: -16.5, z: -16.5}
+  initializeOnStart: 0
+  reinitialize: 0
+  tickRate: 10
+  ticks: 0
+  tickTime: 0
+  sizeX: 3
+  sizeZ: 3
+  sizeY: 3
+  chunkPrefab: {fileID: 295532554393286344, guid: 7a4cdf91e661be647bc0af8bbfab23dd,
+    type: 3}
+  canTick: 1
+  type: 0
+--- !u!54 &8120304655936841788
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8120304655936841785}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 10
+  m_AngularDrag: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 126
+  m_CollisionDetection: 1
