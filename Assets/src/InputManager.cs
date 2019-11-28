@@ -147,9 +147,6 @@ namespace Swordfish
 
 		public void Initialize()
 		{
-            //  Control
-            Add(new InputEntry("Camera View", KeyCode.F5, "Control"));
-
 			//  Axes
             Add(new InputEntry("MouseX", "Mouse X", "Axes"));
             Add(new InputEntry("MouseY", "Mouse Y", "Axes"));

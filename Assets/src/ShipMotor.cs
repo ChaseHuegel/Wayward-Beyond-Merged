@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Physics.Extensions;
 using Swordfish;
 
 public class ShipMotor : MonoBehaviour
@@ -12,14 +13,13 @@ public class ShipMotor : MonoBehaviour
     public float yaw = 10.0f;
     public float roll = 10.0f;
 
+    public float throttle = 0.0f;
+
     public VoxelComponent component;
-    public Rigidbody rigidbody;
 
     public void Start()
     {
         component = GetComponent<VoxelComponent>();
-        rigidbody = GetComponent<Rigidbody>();
-        rigidbody.centerOfMass = Vector3.zero;
 
         thrust = new float[6];
         rotation = new float[3];
@@ -112,17 +112,34 @@ public class ShipMotor : MonoBehaviour
 
         if (force != Vector3.zero)
         {
-            rigidbody.AddRelativeForce(force);
+            if (throttle < 1.0f) { throttle += 0.25f * Time.fixedDeltaTime; }
+            else { throttle = 1.0f; }
+
+            component.entity.ApplyLinearImpulse( component.transform.rotation * (throttle * force) );
+        }
+        else
+        {
+            if (throttle > 0.0f) { throttle -= 0.25f * Time.fixedDeltaTime; }
+            else { throttle = 0.0f; }
         }
 
         if (torque != Vector3.zero)
         {
-            rigidbody.AddRelativeTorque(torque);
+            component.entity.ApplyAngularImpulse(torque);
         }
 
-        if (rigidbody.velocity.magnitude > 500)
+        Vector3 velocity = component.entity.GetLinearVelocity();
+        if (velocity.magnitude > 300)
 		{
-			rigidbody.velocity = Vector3.ClampMagnitude(rigidbody.velocity, 500);
+			velocity = Vector3.ClampMagnitude(velocity, 300);
+            component.entity.SetLinearVelocity(velocity);
+		}
+
+        velocity = component.entity.GetAngularVelocity();
+        if (velocity.magnitude > 100)
+		{
+			velocity = Vector3.ClampMagnitude(velocity, 100);
+            component.entity.SetAngularVelocity(velocity);
 		}
     }
 }

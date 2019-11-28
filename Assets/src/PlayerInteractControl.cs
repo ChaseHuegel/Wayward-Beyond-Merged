@@ -61,29 +61,52 @@ public class PlayerInteractControl : MonoBehaviour
 			return;
 		}
 
-		RaycastHit hit;
+		Unity.Physics.RaycastHit hit;
+		Unity.Entities.Entity hitEntity;
 		hitData = null;
-		if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 8))
+
+		if (GameMaster.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), 8, out hit, out hitEntity))
 		{
-			hitData = new VoxelHitData(hit);
+			hitData = new VoxelHitData(hit, hitEntity);
+
+			Vector3 offsetPos = hitData.hitTransform.InverseTransformPoint(hit.Position);
+
+			offsetPos.x = (float)Math.Round(offsetPos.x);
+			offsetPos.y = (float)Math.Round(offsetPos.y);
+			offsetPos.z = (float)Math.Round(offsetPos.z);
+
+			// offsetPos.x = offsetPos.x - offsetPos.x % 1;
+			// offsetPos.y = offsetPos.y - offsetPos.y % 1;
+			// offsetPos.z = offsetPos.z - offsetPos.z % 1;
+
+			offsetPos = hitData.hitTransform.rotation * offsetPos;
+			Vector3 hitPos = hitData.hitTransform.position + offsetPos;
+
+			Debug.DrawLine(Camera.main.ScreenPointToRay(Input.mousePosition).origin, hitPos, Color.red);
+			Debug.DrawRay(hit.Position, hit.SurfaceNormal, Color.yellow);
+			Debug.DrawRay(hit.Position, hit.SurfaceNormal * -0.5f, Color.cyan);
+		}
+		else
+		{
+			Debug.DrawRay(Camera.main.ScreenPointToRay(Input.mousePosition).origin, Camera.main.ScreenPointToRay(Input.mousePosition).direction * 8, Color.green);
 		}
 
-		if (hit.collider != null)
-		{
-			Interactable interactable = hit.collider.GetComponent<Interactable>();
-			if (interactable != null)
-			{
-				if (Input.GetMouseButtonDown(1) == true)
-				{
-					interactable.TryInteract(GameMaster.Instance.player.gameObject);
-					return;
-				}
-				else
-				{
-					interactable.TryHover(GameMaster.Instance.player.gameObject);
-				}
-			}
-		}
+		// if (hit.collider != null)
+		// {
+		// 	Interactable interactable = hit.collider.GetComponent<Interactable>();
+		// 	if (interactable != null)
+		// 	{
+		// 		if (Input.GetMouseButtonDown(1) == true)
+		// 		{
+		// 			interactable.TryInteract(GameMaster.Instance.player.gameObject);
+		// 			return;
+		// 		}
+		// 		else
+		// 		{
+		// 			interactable.TryHover(GameMaster.Instance.player.gameObject);
+		// 		}
+		// 	}
+		// }
 
 		Item mainHand = GameMaster.Instance.player.getEquipment().getSlot(EquipmentSlot.MAINHAND);
 		if (mainHand.isValid() == false) { return; }
@@ -129,7 +152,7 @@ public class PlayerInteractControl : MonoBehaviour
 					{
 						GameMaster.Instance.player.getInventory().Remove(mainHand, 1);
 
-						GameMaster.Instance.PlaySound(placeSound, hit.point);
+						GameMaster.Instance.PlaySound(placeSound, hit.Position);
 						GetComponent<MotionAnimator>().PlayMotion("mainHandAttack");
 
 						if (thisBlock.getBlockData() is Rotatable)
@@ -170,14 +193,14 @@ public class PlayerInteractControl : MonoBehaviour
 			{
 				if (clickedBlock.getType() != Voxel.VOID && clickedBlock.getType() != Voxel.SHIP_CORE)
 				{
-					Position droppedPosition = Position.fromVector3(hit.point);
+					Position droppedPosition = Position.fromVector3(hit.Position);
 					GameMaster.Instance.DropItemNaturally(droppedPosition, clickedBlock.getType(), 1);
 
 					Block thisBlock = hitData.voxelObject.setBlockAt(hitData.atHit, Voxel.VOID);
 
 					if (thisBlock.getChunk() != null)
 					{
-						GameMaster.Instance.PlaySound(placeSound, hit.point);
+						GameMaster.Instance.PlaySound(placeSound, hit.Position);
 						GetComponent<MotionAnimator>().PlayMotion("mainHandAttack");
 					}
 				}
@@ -190,7 +213,7 @@ public class PlayerInteractControl : MonoBehaviour
 
 					if (thisBlock.getChunk() != null)
 					{
-						GameMaster.Instance.PlaySound(placeSound, hit.point);
+						GameMaster.Instance.PlaySound(placeSound, hit.Position);
 						GetComponent<MotionAnimator>().PlayMotion("mainHandAttack");
 					}
 				}
@@ -248,7 +271,7 @@ public class PlayerInteractControl : MonoBehaviour
 
                         if (thisBlock.getChunk() != null)
                         {
-							GameMaster.Instance.PlaySound(placeSound, hit.point);
+							GameMaster.Instance.PlaySound(placeSound, hit.Position);
 							GetComponent<MotionAnimator>().PlayMotion("mainHandAttack");
 
                             if (thisBlock.getBlockData() is Rotatable)
@@ -286,8 +309,8 @@ public class PlayerInteractControl : MonoBehaviour
 
 	public void DrawDisplayModel(Vector3 _displayPosition)
 	{
-		Vector3 position = hitData.rayInfo.transform.rotation * (_displayPosition + hitData.component.pivotPoint) + hitData.rayInfo.transform.position + (Vector3.one * 0.5f);
-		Quaternion rotation = hitData.rayInfo.transform.rotation;
+		Vector3 position = hitData.hitTransform.rotation * (_displayPosition) + hitData.hitTransform.position;
+		Quaternion rotation = hitData.hitTransform.rotation;
 		Vector3 scale = Vector3.one * (1.01f + (Mathf.PingPong(Time.time * 3, 1) * 0.05f ));
 		Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, scale);
 		Graphics.DrawMesh(displayModel, matrix, GameMaster.Instance.selectionMaterials[0], 0);

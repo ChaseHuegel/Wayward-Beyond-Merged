@@ -15,7 +15,7 @@ namespace Swordfish
             {
                 VoxelObject thisVoxelObject = entry.Value;
 
-				if (thisVoxelObject != null)
+				if (thisVoxelObject != null && thisVoxelObject.isStatic == false)
 				{
 					thisVoxelObject.Tick();
 				}
@@ -33,6 +33,11 @@ namespace Swordfish
             {
                 VoxelObject thisVoxelObject = entry.Value;
 
+				if (thisVoxelObject != null)
+				{
+					thisVoxelObject.Update();
+				}
+
 				if (thisVoxelObject.component != null)
 				{
 					thisVoxelObject.component.TryBuildChunk();
@@ -46,7 +51,7 @@ namespace Swordfish
             {
                 VoxelObject thisVoxelObject = entry.Value;
 
-				if (thisVoxelObject != null)
+				if (thisVoxelObject != null && thisVoxelObject.loaded == true)
 				{
 					thisVoxelObject.Render();
 				}

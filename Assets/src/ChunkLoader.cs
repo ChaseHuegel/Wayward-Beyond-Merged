@@ -95,10 +95,17 @@ namespace Swordfish
 					VoxelObject voxelObject = thisComponent.position.voxelObject;
 					if (voxelObject == null) { continue; }
 
-					Chunk thisChunk = voxelObject.GenerateChunk(thisPosition.x, thisPosition.y, thisPosition.z);
-					thisChunk.component = thisComponent;
-					thisComponent.chunk = thisChunk;
-					thisChunk.PrepareLoad();
+					if (thisComponent.chunk == null)
+					{
+						Chunk thisChunk = voxelObject.GenerateChunk(thisPosition.x, thisPosition.y, thisPosition.z);
+						thisChunk.component = thisComponent;
+						thisComponent.chunk = thisChunk;
+						thisChunk.PrepareLoad();
+					}
+					else
+					{
+						thisComponent.BuildCollision();
+					}
 
 					if (state != ChunkState.Stopped)
 					{

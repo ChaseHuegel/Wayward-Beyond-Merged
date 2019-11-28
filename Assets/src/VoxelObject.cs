@@ -24,6 +24,7 @@ namespace Swordfish
 		public int getBlockSizeY() { return chunkSizeY * Constants.CHUNK_SIZE; }
 		public int getBlockSizeZ() { return chunkSizeZ * Constants.CHUNK_SIZE; }
 
+		public bool isStatic;
 		public bool loaded;
 		public int unloadedChunks;
 
@@ -281,15 +282,8 @@ namespace Swordfish
 			}
 		}
 
-		public void Tick()
+		public void Update()
 		{
-			ticksAlive++;
-
-			if (loaded == false && unloadedChunks == 0)
-			{
-				FinishLoad();
-			}
-
 			// for (int i = 0; i < chunkLoadQueue.Count; i++)
 			if (chunkLoadQueue.Count > 0)
 			{
@@ -309,6 +303,16 @@ namespace Swordfish
 
 					if (unloadedChunks == 0) { FinishLoad(); }
 				}
+			}
+		}
+
+		public void Tick()
+		{
+			ticksAlive++;
+
+			if (loaded == false && unloadedChunks == 0)
+			{
+				FinishLoad();
 			}
 
             foreach (KeyValuePair<string, Chunk> entry in chunks)

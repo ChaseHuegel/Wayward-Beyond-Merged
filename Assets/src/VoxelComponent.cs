@@ -2,25 +2,37 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Transforms;
+using Unity.Physics;
+using Unity.Mathematics;
+using Unity.Rendering;
 using Swordfish;
 
 public class VoxelComponent : MonoBehaviour
 {
+	public Unity.Entities.Entity entity;
 	public VoxelObject voxelObject;
 	public Vector3 pivotPoint;
 
 	public bool initializeOnStart = false;
     public bool reinitialize = false;
 
+	public bool physicsRebuildWaiting = false;
+	public bool buildPhysics = false;
+
 	public ulong tickRate = 25;
 	public ulong ticks = 0;
 	public ulong tickTime = 0;
 
+	public int chunksWaitingForBuild = 0;
+
 	public int sizeX = 4;
 	public int sizeZ = 4;
     public int sizeY = 4;
-	public GameObject chunkPrefab;
 
+	public bool isStatic = false;
 	public bool canTick = false;
 
 	public GameObject[,,] chunkObjects;
@@ -48,13 +60,110 @@ public class VoxelComponent : MonoBehaviour
 		voxelObject.setName(_name);
 	}
 
+	public void setSize(int _size)
+	{
+		sizeX = _size;
+		sizeY = _size;
+		sizeZ = _size;
+	}
+
+	public void setStatic(bool _static)
+	{
+		isStatic = _static;
+		if (voxelObject != null) { voxelObject.isStatic = _static; }
+	}
+
 	public VoxelComponent ChangeType(VoxelObjectType _type)
 	{
 		return Initialize(_type);
 	}
 
+	public Unity.Entities.Entity CreateEntity()
+	{
+		BoxGeometry box = new BoxGeometry
+		{
+			Center = float3.zero,
+			Orientation = quaternion.identity,
+			Size = new float3(1),
+			BevelRadius = 0.0f
+		};
+
+		entity = GameMaster.Instance.CreateBody(this.transform.position, this.transform.rotation, Unity.Physics.BoxCollider.Create(box), Vector3.zero, Vector3.zero, 1.0f, !isStatic);
+
+		return entity;
+	}
+
+	public void TagCollisionRebuild()
+	{
+		buildPhysics = true;
+	}
+
+	public void RebuildCollision()
+	{
+		List<ChunkComponent> chunkList = new List<ChunkComponent>();
+		int colliderCount = 0;
+		for (int x = 0; x < sizeX; x++)
+		{
+			for (int z = 0; z < sizeZ; z++)
+			{
+				for (int y = 0; y< sizeY; y++)
+				{
+					if (chunkComponents[x, y, z] != null || chunkComponents[x, y, z].chunk.getCollisionData() != null)
+					{
+						chunkList.Add(chunkComponents[x, y, z]);
+						colliderCount += chunkComponents[x, y, z].chunk.getCollisionData().Count;
+					}
+				}
+			}
+		}
+
+		BoxGeometry box = new BoxGeometry
+		{
+			Center = float3.zero,
+			Orientation = quaternion.identity,
+			Size = new float3(0.9f),
+			BevelRadius = 0.0f
+		};
+
+		Vector3 position = Vector3.zero;
+		quaternion rotation = quaternion.identity;
+		Chunk chunk = null;
+		int colliderIndex = 0;
+
+		NativeArray<CompoundCollider.ColliderBlobInstance> colliders = new NativeArray<CompoundCollider.ColliderBlobInstance>(colliderCount, Allocator.Temp);
+
+		for (int i = 0; i < chunkList.Count; i++)
+		{
+			chunk = chunkList[i].chunk;
+
+			for (int n = 0; n < chunk.getCollisionData().Count; n++)
+			{
+				float3 center = chunk.getCollisionData().centers[n] + (new Vector3( chunk.getX(), chunk.getY(), chunk.getZ() ) * Constants.CHUNK_SIZE) + pivotPoint;
+				box.Size = chunk.getCollisionData().sizes[n];
+
+				colliders[colliderIndex] = new CompoundCollider.ColliderBlobInstance
+				{
+					CompoundFromChild = new RigidTransform(quaternion.identity, center),
+					Collider = Unity.Physics.BoxCollider.Create(box)
+				};
+
+				colliderIndex++;
+			}
+		}
+
+		BlobAssetReference<Unity.Physics.Collider> collider = CompoundCollider.Create(colliders);
+		GameMaster.Instance.entityManager.SetComponentData(entity, new PhysicsCollider { Value = collider });
+
+		if (isStatic == false) { GameMaster.Instance.SetEntityMass(entity, collider, colliders.Length); }
+
+		colliders.Dispose();
+	}
+
 	public VoxelComponent Initialize(VoxelObjectType _type = VoxelObjectType.GENERIC)
 	{
+		CreateEntity();
+		this.GetComponent<EntityTracker>().SetReceivedEntity(entity);
+
 		foreach (Transform child in transform)
 		{
 			Destroy(child.gameObject);
@@ -76,6 +185,7 @@ public class VoxelComponent : MonoBehaviour
 				break;
 		}
 
+		voxelObject.isStatic = isStatic;
 		voxelObject.setName(gameObject.name);
 
 		chunkObjects = new GameObject[sizeX, sizeY, sizeZ];
@@ -85,27 +195,14 @@ public class VoxelComponent : MonoBehaviour
         pivotPoint += (Vector3.one * 0.5f);
 		pivotPoint *= -1;
 
-		//StartCoroutine("CreateChunkComponents");
-
 		for (int x = 0; x < sizeX; x++)
 		{
 			for (int z = 0; z < sizeZ; z++)
 			{
 				for (int y = sizeY - 1; y >= 0; y--)
 				{
-					// Vector3 position = new Vector3(x * Constants.CHUNK_SIZE, y * Constants.CHUNK_SIZE, z * Constants.CHUNK_SIZE);
-                    // position += pivotPoint;
-
-					// GameObject temp = (GameObject)Instantiate(chunkPrefab, Vector3.zero, Quaternion.identity);
-					// ChunkComponent chunkComponent = temp.GetComponent<ChunkComponent>();
-					// chunkComponent.position = new Coord3D(x, y, z, voxelObject);
-					// chunkComponent.voxelComponent = this;
-
-					// temp.name = ("Chunk:" + x + "-" + y + "-" + z);
-					// temp.transform.parent = this.transform;
-					// temp.transform.localPosition = position;
-					// chunkObjects[x, y, z] = temp;
-					ChunkComponent chunkComponent = this.gameObject.AddComponent<ChunkComponent>();
+					ChunkComponent chunkComponent = new ChunkComponent();
+					chunkComponent.transform = this.transform;
 					chunkComponent.position = new Coord3D(x, y, z, voxelObject);
 					chunkComponent.voxelComponent = this;
 					chunkComponents[x, y, z] = chunkComponent;
@@ -120,38 +217,6 @@ public class VoxelComponent : MonoBehaviour
 		return this;
 	}
 
-	// public IEnumerator CreateChunkComponents()
-	// {
-	// 	for (int x = 0; x < sizeX; x++)
-	// 	{
-	// 		for (int z = 0; z < sizeZ; z++)
-	// 		{
-	// 			for (int y = sizeY - 1; y >= 0; y--)
-	// 			{
-	// 				// Vector3 position = new Vector3(x * Constants.CHUNK_SIZE, y * Constants.CHUNK_SIZE, z * Constants.CHUNK_SIZE);
-    //                 // position += pivotPoint;
-
-	// 				// GameObject temp = (GameObject)Instantiate(chunkPrefab, Vector3.zero, Quaternion.identity);
-	// 				// ChunkComponent chunkComponent = temp.GetComponent<ChunkComponent>();
-	// 				// chunkComponent.position = new Coord3D(x, y, z, voxelObject);
-	// 				// chunkComponent.voxelComponent = this;
-
-	// 				// temp.name = ("Chunk:" + x + "-" + y + "-" + z);
-	// 				// temp.transform.parent = this.transform;
-	// 				// temp.transform.localPosition = position;
-	// 				// chunkObjects[x, y, z] = temp;
-	// 				ChunkComponent chunkComponent = this.gameObject.AddComponent<ChunkComponent>();
-	// 				chunkComponent.position = new Coord3D(x, y, z, voxelObject);
-	// 				chunkComponent.voxelComponent = this;
-	// 				chunkComponents[x, y, z] = chunkComponent;
-
-	// 				ChunkLoader.instance.Queue(chunkComponent);
-	// 				yield return null;
-	// 			}
-	// 		}
-	// 	}
-	// }
-
 	public bool TryBuildChunk()
 	{
 		if (initialized == true)
@@ -159,7 +224,7 @@ public class VoxelComponent : MonoBehaviour
 			if (buildingChunks.Count > 0)
 			{
 				ChunkComponent thisComponent = buildingChunks.Dequeue();
-				if (thisComponent != null) { thisComponent.BuildChunk(); return true; }
+				if (thisComponent != null) { thisComponent.BuildRender(); return true; }
 			}
 		}
 
@@ -172,6 +237,25 @@ public class VoxelComponent : MonoBehaviour
 		{
 			loaded = true;
 			Util.LoadVoxelObject(voxelObject, voxelObject.getName());
+
+			TagCollisionRebuild();
+		}
+
+		if (physicsRebuildWaiting == false && buildingChunks.Count > 0)
+		{
+			physicsRebuildWaiting = true;
+		}
+
+		if (physicsRebuildWaiting == true && buildingChunks.Count == 0)
+		{
+			physicsRebuildWaiting = false;
+			TagCollisionRebuild();
+		}
+
+		if (buildPhysics == true)
+		{
+			buildPhysics = false;
+			RebuildCollision();
 		}
 
 		if (reinitialize == true)
@@ -211,39 +295,17 @@ public class VoxelComponent : MonoBehaviour
 						{
 							if (thisComponent.chunk.getCollisionState() != CollisionState.Built || thisComponent.chunk.getRenderState() != RenderState.Rendered)
 							{
+								ChunkLoader.instance.Queue(thisComponent);
 								buildingChunks.Enqueue(thisComponent);//thisComponent.BuildChunk();
 							}
 						}
 					}
 				}
 			}
+
+			chunksWaitingForBuild = buildingChunks.Count;
 		}
 	}
-
-	//	Render chunks
-	// public void LateUpdate()
-	// {
-		// voxelObject.Render();
-	// }
-
-	// public void FixedUpdate()
-	// {
-		// if (initialized == true)
-		// {
-			// tickTime++;
-
-			// if (tickTime % tickRate == 0 && tickTime != 0)
-			// {
-				// if (canTick == true)
-				// {
-					// voxelObject.Tick();
-				// }
-
-				// ticks++;
-				// tickTime = 0;
-			// }
-		// }
-	// }
 
 	public void OnDrawGizmosSelected()
 	{

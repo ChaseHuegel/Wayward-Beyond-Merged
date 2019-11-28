@@ -3,6 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Transforms;
+using Unity.Physics;
+using Unity.Mathematics;
+using Unity.Rendering;
 using Swordfish;
 using Swordfish.items;
 
@@ -21,9 +27,9 @@ public class GameMaster : MonoBehaviour
 	public int renderQueue = 0;
 	public int collisionQueue = 0;
 
-	public Material[] voxelMaterials;
-	public Material[] thumbnailMaterials;
-	public Material[] selectionMaterials;
+	public UnityEngine.Material[] voxelMaterials;
+	public UnityEngine.Material[] thumbnailMaterials;
+	public UnityEngine.Material[] selectionMaterials;
 	public Mesh[] models;
 	public Texture2D[] images;
 
@@ -46,6 +52,9 @@ public class GameMaster : MonoBehaviour
 
 	public PlayerMotor player;
 
+    public EntityManager entityManager;
+
+	public GameObject voxelEntityPrefab;
 	public GameObject voxelObjectPrefab;
 	public GameObject voxelColliderPrefab;
 	public GameObject droppedItemPrefab;
@@ -54,10 +63,7 @@ public class GameMaster : MonoBehaviour
 	public AudioClip placeSound;
 	public AudioClip pickupSound;
 
-	public bool followingShip = false;
-	public Transform playerCamera = null;
-	public Transform shipCamera = null;
-	public Transform shipObject = null;
+	public Dictionary<Unity.Entities.Entity, Transform> entitiesToObjectMap;
 
 	//  Keep this object alive
     private static GameMaster _instance;
@@ -92,6 +98,9 @@ public class GameMaster : MonoBehaviour
 
 	public void Initialize()
 	{
+        entityManager = World.Active.EntityManager;
+		entitiesToObjectMap = new Dictionary<Unity.Entities.Entity, Transform>();
+
 		voxelMaster = new VoxelMaster();
 
 		cachedModels = new CachedModel[models.Length];
@@ -165,19 +174,6 @@ public class GameMaster : MonoBehaviour
 
 		voxelMaster.Update();
 
-		if (InputManager.Get("Camera View") == true)
-		{
-			followingShip = !followingShip;
-
-			playerCamera.position = shipObject.position;
-
-			shipCamera.gameObject.SetActive( followingShip );
-			playerCamera.gameObject.SetActive( !followingShip );
-
-			shipObject.GetComponent<GentleBob>().isEnabled = followingShip;
-			shipObject.GetComponent<Rigidbody>().isKinematic = !followingShip;
-		}
-
 		if (Input.GetKeyDown(KeyCode.Escape) == true)
 		{
 			Application.Quit();
@@ -185,12 +181,12 @@ public class GameMaster : MonoBehaviour
 
 		if (Input.GetKeyDown(KeyCode.F1) == true)
 		{
-			SpawnVoxelObject(Position.fromVector3(player.transform.position));
+			SpawnVoxelObject(Swordfish.Position.fromVector3(player.transform.position));
 		}
 
 		if (Input.GetKeyDown(KeyCode.F2) == true)
 		{
-			SpawnAsteroid(Position.fromVector3(player.transform.position));
+			SpawnAsteroid(Swordfish.Position.fromVector3(player.transform.position));
 		}
 
 		if (Input.GetKeyDown(KeyCode.F3) == true)
@@ -297,7 +293,7 @@ public class GameMaster : MonoBehaviour
 
 			Mesh mesh = ModelBuilder.GetVoxelMesh(voxel);
 
-			Position offset = thisBlock.getViewOffset();
+			Swordfish.Position offset = thisBlock.getViewOffset();
 			Graphics.DrawMesh(mesh, Matrix4x4.TRS(new Vector3(offset.x, offset.y, offset.z), Quaternion.identity, Vector3.one), thumbnailMaterials[0], 0, renderCamera);
 
 			renderCamera.Render();
@@ -331,6 +327,119 @@ public class GameMaster : MonoBehaviour
 		}
 	}
 
+	public unsafe void SetEntityMass(Unity.Entities.Entity _entity, BlobAssetReference<Unity.Physics.Collider> _collider, float _mass)
+	{
+		Unity.Physics.Collider* colliderPtr = (Unity.Physics.Collider*)_collider.GetUnsafePtr();
+		entityManager.SetComponentData(_entity, PhysicsMass.CreateDynamic(colliderPtr->MassProperties, _mass));
+	}
+
+	public unsafe Unity.Entities.Entity CreateBody(float3 position, quaternion orientation,
+        BlobAssetReference<Unity.Physics.Collider> collider,
+        float3 linearVelocity, float3 angularVelocity, float mass, bool isDynamic)
+	{
+		ComponentType[] componentTypes = new ComponentType[isDynamic ? 7 : 3];
+
+		componentTypes[0] = typeof(TranslationProxy);
+		componentTypes[1] = typeof(RotationProxy);
+		componentTypes[2] = typeof(PhysicsCollider);
+		if (isDynamic)
+		{
+			componentTypes[3] = typeof(PhysicsVelocity);
+			componentTypes[4] = typeof(PhysicsMass);
+			componentTypes[5] = typeof(PhysicsDamping);
+			componentTypes[6] = typeof(PhysicsGravityFactor);
+		}
+
+		Unity.Entities.Entity entity = entityManager.CreateEntity(componentTypes);
+
+		entityManager.AddComponentData(entity, new Translation { Value = position });
+		entityManager.AddComponentData(entity, new Rotation { Value = orientation });
+		entityManager.SetComponentData(entity, new PhysicsCollider { Value = collider });
+		if (isDynamic)
+		{
+			Unity.Physics.Collider* colliderPtr = (Unity.Physics.Collider*)collider.GetUnsafePtr();
+			entityManager.SetComponentData(entity, PhysicsMass.CreateDynamic(colliderPtr->MassProperties, mass));
+
+			float3 angularVelocityLocal = math.mul(math.inverse(colliderPtr->MassProperties.MassDistribution.Transform.rot), angularVelocity);
+			entityManager.SetComponentData(entity, new PhysicsVelocity()
+			{
+				Linear = linearVelocity,
+				Angular = angularVelocityLocal
+			});
+			entityManager.SetComponentData(entity, new PhysicsDamping()
+			{
+				Linear = 1.5f,
+				Angular = 1.5f
+			});
+
+			entityManager.SetComponentData(entity, new PhysicsGravityFactor { Value = 0.0f });
+		}
+
+		return entity;
+	}
+
+	public void MergeEntitiesTogether(Unity.Entities.Entity _parent, Unity.Entities.Entity _child)
+    {
+        if (entityManager.HasComponent(_child, typeof(Parent)) == false)
+        {
+            entityManager.AddComponentData(_child, new Parent { Value = _parent });
+        }
+		else
+		{
+            entityManager.SetComponentData(_child, new Parent { Value = _parent });
+		}
+
+		if (entityManager.HasComponent(_child, typeof(LocalToParent)) == false)
+        {
+            entityManager.AddComponentData(_child, new LocalToParent() );
+        }
+		else
+		{
+            entityManager.SetComponentData(_child, new LocalToParent());
+		}
+
+		DynamicBuffer<LinkedEntityGroup> buf = entityManager.GetBuffer<LinkedEntityGroup>(_parent);
+        buf.Add(_child);
+    }
+
+	public static bool Raycast(UnityEngine.Ray ray, float distance, out Unity.Physics.RaycastHit outHit, out Unity.Entities.Entity entity)
+	{
+		return Raycast(ray.origin, ray.origin + (ray.direction * distance), out outHit, out entity);
+	}
+
+	public static bool Raycast(float3 RayFrom, float3 RayTo, out Unity.Physics.RaycastHit outHit, out Unity.Entities.Entity entity)
+	{
+		var physicsWorldSystem = Unity.Entities.World.Active.GetExistingSystem<Unity.Physics.Systems.BuildPhysicsWorld>();
+		var collisionWorld = physicsWorldSystem.PhysicsWorld.CollisionWorld;
+		RaycastInput input = new RaycastInput()
+		{
+			Start = RayFrom,
+			End = RayTo,
+			Filter = new CollisionFilter()
+			{
+				BelongsTo = ~0u,
+				CollidesWith = ~0u, // all 1s, so all layers, collide with everything
+				GroupIndex = 0
+			}
+		};
+
+		Unity.Physics.RaycastHit hit = new Unity.Physics.RaycastHit();
+		bool haveHit = collisionWorld.CastRay(input, out hit);
+
+		outHit = hit;
+		entity = Unity.Entities.Entity.Null;
+
+		if (haveHit)
+		{
+			// see hit.Position
+			// see hit.SurfaceNormal
+			entity = physicsWorldSystem.PhysicsWorld.Bodies[hit.RigidBodyIndex].Entity;
+			return true;
+		}
+
+		return false;
+	}
+
 	public void PlaySound(AudioClip _clip, float _volume = 1.0f)
 	{
 		audioPlayer.PlayOneShot(_clip, _volume);
@@ -341,17 +450,17 @@ public class GameMaster : MonoBehaviour
 		AudioSource.PlayClipAtPoint(_clip, _position, _volume);
 	}
 
-	public Item DropItemNaturally(Position _position, Voxel _voxel, int _count = 1)
+	public Item DropItemNaturally(Swordfish.Position _position, Voxel _voxel, int _count = 1)
 	{
 		return ((BLOCKITEM)DropItemNaturally(_position, _voxel.toItem(), _count)).setVoxel(_voxel);
 	}
 
-	public Item DropItemNaturally(Position _position, ItemType _type, int _count = 1)
+	public Item DropItemNaturally(Swordfish.Position _position, ItemType _type, int _count = 1)
 	{
 		return DropItemNaturally(_position, _type.toItem(), _count);
 	}
 
-	public Item DropItemNaturally(Position _position, Item _item, int _count = 1)
+	public Item DropItemNaturally(Swordfish.Position _position, Item _item, int _count = 1)
 	{
 		Vector3 offset = new Vector3( UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f ) * 0.5f;
 		GameObject temp = (GameObject)Instantiate(droppedItemPrefab, _position.toVector3() + offset, Quaternion.identity);
@@ -362,18 +471,22 @@ public class GameMaster : MonoBehaviour
 		return item;
 	}
 
-	public VoxelObject SpawnVoxelObject(Position _position)
+	public VoxelObject SpawnVoxelObject(Swordfish.Position _position)
 	{
 		VoxelComponent component = Instantiate(voxelObjectPrefab, _position.toVector3(), Quaternion.identity).GetComponent<VoxelComponent>();
 		component.setName("voxelObject" + voxelMaster.voxelObjects.Count);
+		component.setSize(2);
+		component.setStatic(false);
 		component.Initialize(VoxelObjectType.GENERIC);
 		return component.voxelObject;
 	}
 
-	public VoxelObject SpawnAsteroid(Position _position)
+	public VoxelObject SpawnAsteroid(Swordfish.Position _position)
 	{
 		VoxelComponent component = Instantiate(voxelObjectPrefab, _position.toVector3(), Quaternion.identity).GetComponent<VoxelComponent>();
 		component.setName("asteroid" + voxelMaster.voxelObjects.Count);
+		component.setSize(4);
+		component.setStatic(true);
 		component.Initialize(VoxelObjectType.ASTEROID);
 		return component.voxelObject;
 	}
