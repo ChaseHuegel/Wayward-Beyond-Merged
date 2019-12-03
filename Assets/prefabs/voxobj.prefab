@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8120304655936841790}
   - component: {fileID: 8120304655936841791}
   - component: {fileID: 8120304655936841788}
+  - component: {fileID: 3699539632728511566}
   m_Layer: 0
   m_Name: voxobj
   m_TagString: Voxel
@@ -50,19 +51,22 @@ MonoBehaviour:
     chunkSizeX: 0
     chunkSizeZ: 0
     chunkSizeY: 0
+    isStatic: 0
     loaded: 0
     unloadedChunks: 0
   pivotPoint: {x: -16.5, y: -16.5, z: -16.5}
   initializeOnStart: 0
   reinitialize: 0
+  physicsRebuildWaiting: 0
+  buildPhysics: 0
   tickRate: 10
   ticks: 0
   tickTime: 0
+  chunksWaitingForBuild: 0
   sizeX: 3
   sizeZ: 3
   sizeY: 3
-  chunkPrefab: {fileID: 295532554393286344, guid: 7a4cdf91e661be647bc0af8bbfab23dd,
-    type: 3}
+  isStatic: 0
   canTick: 1
   type: 0
 --- !u!54 &8120304655936841788
@@ -81,3 +85,15 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 126
   m_CollisionDetection: 1
+--- !u!114 &3699539632728511566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8120304655936841785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edac9c68a2ae51043b18d6d11e918eca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

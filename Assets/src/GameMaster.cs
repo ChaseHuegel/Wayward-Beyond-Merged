@@ -167,12 +167,12 @@ public class GameMaster : MonoBehaviour
 
 	public void Update()
 	{
+		voxelMaster.Update();
+
 		if (Time.frameCount % 60 == 0)
 		{
 			GC.Collect();
 		}
-
-		voxelMaster.Update();
 
 		if (Input.GetKeyDown(KeyCode.Escape) == true)
 		{
@@ -311,7 +311,7 @@ public class GameMaster : MonoBehaviour
 			{
 				for (int y = 0; y < width; y++)
 				{
-					if (result.GetPixel(x, y).g >= 0.75f && result.GetPixel(x, y).r <= 0.4f && result.GetPixel(x, y).b <= 0.4f)
+					if (result.GetPixel(x, y).g >= 0.7f && result.GetPixel(x, y).r <= 0.4f && result.GetPixel(x, y).b <= 0.4f)
 					{
 						clearColor = result.GetPixel(x, y);
 						clearColor.a = 0.0f;

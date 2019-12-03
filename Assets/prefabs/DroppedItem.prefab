@@ -230,7 +230,7 @@ MonoBehaviour:
   presetVoxel: 0
   presetCount: 1
   isVoxel: 0
-  itemMaterial: {fileID: 2100000, guid: 15d0ef60596a4c640864740edaf5712d, type: 2}
+  itemMaterial: {fileID: 0}
   item:
     amount: 1
     name: default

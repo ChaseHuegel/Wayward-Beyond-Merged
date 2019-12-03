@@ -81,12 +81,15 @@ public class ExtrudeSprite : MonoBehaviour
         AddQuad(P, P2, Vector3.forward*depth, normal, uv,uv,false);
     }
 
-    void GenerateMesh()
+    public void GenerateMesh()
     {
         Texture2D tex = this.GetComponent<MeshRenderer>().materials[0].GetTexture("_BaseColorMap")  as Texture2D;
+        if (tex == null) { return; }
+
         m_Colors = tex.GetPixels32();
         m_Width = tex.width;
         m_Height = tex.height;
+
         //      first point                     , second point                    , relative 3. P, normal,          lower UV,     Upper UV,    flipUV
         AddQuad(new Vector3(-0.5f, -0.5f, 0    ), new Vector3(-0.5f,  0.5f, 0    ), Vector3.right, Vector3.back,    Vector2.zero, Vector2.one, false);
         AddQuad(new Vector3(-0.5f, -0.5f, depth), new Vector3( 0.5f, -0.5f, depth), Vector3.up,    Vector3.forward, Vector2.zero, Vector2.one, true);
@@ -122,7 +125,7 @@ public class ExtrudeSprite : MonoBehaviour
         GetComponent<MeshFilter>().sharedMesh = mesh;
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         GenerateMesh();
     }

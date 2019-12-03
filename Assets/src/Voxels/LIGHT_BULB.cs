@@ -65,23 +65,23 @@ namespace Swordfish
 			DestroyLight();
 		}
 
-		public override void Tick()
-		{
-			if (light != null && getRandom(getChunk().getVoxelObject().ticksAlive).Next(100) <= 1)
-			{
-				flicker = true;
-			}
+		// public override void Tick()
+		// {
+		// 	if (light != null && getRandom(getChunk().getVoxelObject().ticksAlive).Next(100) <= 1)
+		// 	{
+		// 		flicker = true;
+		// 	}
 
-			if (flicker == true)
-			{
-				light.intensity = 100.0f;
-				flicker = false;
-			}
-			else
-			{
-				light.intensity = 20.0f;
-			}
-		}
+		// 	if (flicker == true)
+		// 	{
+		// 		light.intensity = 100.0f;
+		// 		flicker = false;
+		// 	}
+		// 	else
+		// 	{
+		// 		light.intensity = 20.0f;
+		// 	}
+		// }
 
 		public override void Interact()
 		{
@@ -163,7 +163,7 @@ namespace Swordfish
 			light = (new GameObject("panel_light")).AddComponent<Light>();
 			light.transform.parent = getChunk().getVoxelObject().component.transform;
 			light.transform.localPosition = (Quaternion.Euler(rotation) * (_position - center) + center) + origin - center + getChunk().getVoxelObject().component.pivotPoint;
-			light.color = new Color(0.6f, 0.6f, 0.6f); light.range = 10.0f;
+			light.color = new Color(0.6f, 0.6f, 0.6f); light.range = 10.0f; light.intensity = 15.0f;
 			light.shadows = LightShadows.Hard;
 		}
 	}

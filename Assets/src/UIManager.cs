@@ -263,6 +263,8 @@ public class UIManager : MonoBehaviour
 			mainHand.transform.localPosition = mainHandAnchor + GameMaster.Instance.player.getEquipment().getSlot(EquipmentSlot.MAINHAND).getViewOffset().toVector3();
 			mainHand.transform.localRotation = Quaternion.Euler(GameMaster.Instance.player.getEquipment().getSlot(EquipmentSlot.MAINHAND).getViewRotation().toVector3());
 			mainHand.transform.localScale = GameMaster.Instance.player.getEquipment().getSlot(EquipmentSlot.MAINHAND).getViewScale().toVector3();
+
+			mainHand.SendMessage("GenerateMesh", null, SendMessageOptions.DontRequireReceiver);
 		}
 
 		if (offHand != null)
@@ -280,6 +282,8 @@ public class UIManager : MonoBehaviour
 			offHand.transform.localScale = GameMaster.Instance.player.getEquipment().getSlot(EquipmentSlot.OFFHAND).getViewScale().toVector3();
 
 			offHand.transform.localPosition = new Vector3(-offHand.transform.localPosition.x, offHand.transform.localPosition.y, offHand.transform.localPosition.z);
+
+			offHand.SendMessage("GenerateMesh", null, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 

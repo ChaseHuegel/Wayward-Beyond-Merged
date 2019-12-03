@@ -161,7 +161,7 @@ namespace Swordfish
 			Light light = (new GameObject("core_light_" + _index)).AddComponent<Light>();
 			light.transform.parent = getChunk().getVoxelObject().component.transform;
 			light.transform.localPosition = _position + getChunk().getVoxelObject().component.pivotPoint;
-			light.color = new Color(0.6f, 0.6f, 0.6f); light.range = 10.0f;
+			light.color = new Color(0.6f, 0.6f, 0.6f); light.range = 10.0f; light.intensity = 20.0f;
 			light.shadows = LightShadows.Hard;
 			lights[_index] = light;
 		}

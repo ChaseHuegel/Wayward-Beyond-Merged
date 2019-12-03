@@ -76,7 +76,7 @@ public class CameraController3D : MonoBehaviour
 			this.transform.position = Vector3.SmoothDamp(this.transform.position, targetPos, ref cameraVelocity, movementSmoothing);
 
 			Quaternion targetRot = target.transform.rotation * Quaternion.Euler(rotationOffset);
-			this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRot, Time.fixedDeltaTime * rotationSmoothing);
+			this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRot, Time.deltaTime * rotationSmoothing);
 		}
     }
 }
