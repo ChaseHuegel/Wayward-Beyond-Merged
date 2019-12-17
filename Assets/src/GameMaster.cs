@@ -194,6 +194,11 @@ public class GameMaster : MonoBehaviour
 			debug = !debug;
 		}
 
+		if (Input.GetKeyDown(KeyCode.F5) == true)
+		{
+			SpawnAsteroid( new Swordfish.Position(UnityEngine.Random.Range(-200, 200), UnityEngine.Random.Range(-200, 200), UnityEngine.Random.Range(-200, 200)) );
+		}
+
 		if (reinitialize == true)
 		{
 			reinitialize = false;

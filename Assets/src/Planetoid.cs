@@ -9,6 +9,7 @@ namespace Swordfish
 	public class Planetoid : VoxelObject
 	{
 		public Planetoid(int _sizeX = 1, int _sizeY = 1, int _sizeZ = 1, VoxelComponent _component = null) : base(_sizeX, _sizeY, _sizeZ, _component) {}
+		public Planetoid(int _sizeX, int _sizeY, int _sizeZ, VoxelComponent _component, Guid _guid) : base(_sizeX, _sizeY, _sizeZ, _component, _guid) {}
 
 		public float getDistance(int _x, int _y, int _z)
 		{

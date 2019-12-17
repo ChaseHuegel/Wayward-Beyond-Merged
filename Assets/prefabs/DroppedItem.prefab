@@ -105,7 +105,6 @@ GameObject:
   - component: {fileID: 2403329224724967001}
   - component: {fileID: 2403329224724966950}
   - component: {fileID: 2403329224724967000}
-  - component: {fileID: 2403329224724967003}
   - component: {fileID: 2403329224724967002}
   m_Layer: 9
   m_Name: DroppedItem
@@ -193,19 +192,6 @@ MonoBehaviour:
   facing: {x: 0, y: 0, z: 1}
   facingValue: 0
   direction: {x: 0, y: 0, z: 0, w: 0}
---- !u!65 &2403329224724967003
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2403329224724966948}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2403329224724967002
 MonoBehaviour:
   m_ObjectHideFlags: 0

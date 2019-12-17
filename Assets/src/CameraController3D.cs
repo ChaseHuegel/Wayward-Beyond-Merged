@@ -73,10 +73,14 @@ public class CameraController3D : MonoBehaviour
 								(target.transform.up * movementOffset.y) +
 								(target.transform.forward * (movementOffset.z - currentDistance));
 
-			this.transform.position = Vector3.SmoothDamp(this.transform.position, targetPos, ref cameraVelocity, movementSmoothing);
+			// this.transform.position = targetPos;
+			// this.transform.rotation = target.transform.rotation * Quaternion.Euler(rotationOffset);
+
+			this.transform.position = Vector3.LerpUnclamped(this.transform.position, targetPos, movementSmoothing);
+			// this.transform.position = Vector3.SmoothDamp(this.transform.position, targetPos, ref cameraVelocity, movementSmoothing);
 
 			Quaternion targetRot = target.transform.rotation * Quaternion.Euler(rotationOffset);
-			this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRot, Time.deltaTime * rotationSmoothing);
+			this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRot, Time.fixedDeltaTime * rotationSmoothing);
 		}
     }
 }

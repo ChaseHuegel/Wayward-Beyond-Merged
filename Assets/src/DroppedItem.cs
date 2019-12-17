@@ -34,10 +34,13 @@ namespace Swordfish
 			return item;
 		}
 
-		public void Start()
+		public override void PreInitialize()
 		{
 			itemMaterial = renderer.material;
+        }
 
+        public override void Initialize()
+        {
 			if (presetItem != ItemType.VOID)
 			{
 				if (presetItem == ItemType.BLOCKITEM)

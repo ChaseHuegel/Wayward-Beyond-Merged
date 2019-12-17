@@ -34,10 +34,26 @@ namespace Swordfish
 		private Queue<Chunk> 	chunkUnloadQueue;
 
 		private System.Random 	random;
+		private Guid guid;
 
 		public VoxelObject(int _sizeX = 1, int _sizeY = 1, int _sizeZ = 1, VoxelComponent _component = null)
 		{
-			GameMaster.Instance.voxelMaster.voxelObjects.Add(Guid.NewGuid(), this);
+			guid = Guid.NewGuid();
+			GameMaster.Instance.voxelMaster.voxelObjects[guid] = this;
+
+			chunkSizeX = _sizeX;
+			chunkSizeY = _sizeY;
+			chunkSizeZ = _sizeZ;
+
+			component = _component;
+
+			Initialize();
+		}
+
+		public VoxelObject(int _sizeX, int _sizeY, int _sizeZ, VoxelComponent _component, Guid _guid)
+		{
+			guid = _guid;
+			GameMaster.Instance.voxelMaster.voxelObjects[guid] = this;
 
 			chunkSizeX = _sizeX;
 			chunkSizeY = _sizeY;
@@ -63,12 +79,22 @@ namespace Swordfish
 
 		public void Reset()
 		{
-			random = new System.Random( name.GetHashCode() );
-
 			foreach (KeyValuePair<string, Chunk> entry in chunks)
 			{
 				entry.Value.wipe();
 			}
+
+			random = new System.Random( name.GetHashCode() );
+
+			unloadedChunks = chunkSizeX * chunkSizeY * chunkSizeZ;
+
+			chunkLoadQueue.Clear();
+			chunkUnloadQueue.Clear();
+		}
+
+		public Guid getGUID()
+		{
+			return guid;
 		}
 
 		public string getName()
@@ -85,6 +111,11 @@ namespace Swordfish
 		public System.Random getRandom()
 		{
 			return random;
+		}
+
+		public void setRandomSeed(int _seed)
+		{
+			random = new System.Random( _seed );
 		}
 
 		public List<Chunk> getLoadedChunks()

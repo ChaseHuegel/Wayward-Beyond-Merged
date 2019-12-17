@@ -133,6 +133,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DroppedItem (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 2403329224724966948, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2403329224724966951, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2603,6 +2608,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DroppedItem
       objectReference: {fileID: 0}
+    - target: {fileID: 2403329224724966948, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2403329224724966951, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3148,6 +3158,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: DroppedItem (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 2403329224724966948, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2403329224724966951, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
         type: 3}
@@ -3854,7 +3869,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: -3.7985444e-28, z: 9.01e-43, w: 0}
+  m_BoundingSphereOverride: {x: 0, y: 1.1693356e-19, z: 1.3563156e-19, w: 1.49e-43}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -5151,6 +5166,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DroppedItem (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 2403329224724966948, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2403329224724966951, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -6217,13 +6237,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c45b25eab9d744b8f93b7a5b68af5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 981472832}
-  movementOffset: {x: 0, y: 2, z: 0}
-  movementSmoothing: 0.1
+  target: {fileID: 0}
+  movementOffset: {x: 0, y: 0, z: 0}
+  movementSmoothing: 0
   rotationOffset: {x: 0, y: 0, z: 0}
-  rotationSmoothing: 4
-  distance: 20
-  distanceSmoothing: 1
+  rotationSmoothing: 0
+  distance: 10
+  distanceSmoothing: 0
 --- !u!1 &963923705
 GameObject:
   m_ObjectHideFlags: 0
@@ -13951,7 +13971,7 @@ MonoBehaviour:
       enableBigTilePrepass: 0
       isFptlEnabled: 0
   clearColorMode: 1
-  backgroundColorHDR: {r: 0.01525, g: 0.027412497, b: 0.05, a: 0}
+  backgroundColorHDR: {r: 0.027729679, g: 0.027729679, b: 0.055459358, a: 1}
   clearDepth: 1
   volumeLayerMask:
     serializedVersion: 2
@@ -20393,6 +20413,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DroppedItem (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 2403329224724966948, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2403329224724966951, guid: 68c7915f84ab1f24a857a27e9e4c0d5c,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -26579,6 +26604,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1813453945}
   - component: {fileID: 1813453944}
+  - component: {fileID: 1813453946}
   m_Layer: 0
   m_Name: Toby (1)
   m_TagString: Untagged
@@ -26619,6 +26645,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1813453946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813453943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f040cb00e7e2a14b9c7ce20fc2fd70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isEnabled: 0
+  strength: 0.1
 --- !u!1 &1829746412
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,13 +9,26 @@ public interface IReceiveEntity
     void SetReceivedEntity(Unity.Entities.Entity entity);
 }
 
+public enum EntityTrackingMode
+{
+    SEND,
+    RECIEVE
+}
+
 public class EntityTracker : MonoBehaviour, IReceiveEntity
 {
+    public EntityTrackingMode trackMode = EntityTrackingMode.RECIEVE;
+
     private Unity.Entities.Entity EntityToTrack = Unity.Entities.Entity.Null;
     public void SetReceivedEntity(Unity.Entities.Entity entity)
     {
         EntityToTrack = entity;
         GameMaster.Instance.entitiesToObjectMap.Add(entity, this.transform);
+    }
+
+    public Unity.Entities.Entity GetReceivedEntity()
+    {
+        return EntityToTrack;
     }
 
     public Vector3 getPosition()
@@ -38,8 +51,16 @@ public class EntityTracker : MonoBehaviour, IReceiveEntity
             {
                 EntityManager entityManager = GameMaster.Instance.entityManager;
 
-                transform.position = entityManager.GetComponentData<Translation>(EntityToTrack).Value;
-                transform.rotation = entityManager.GetComponentData<Rotation>(EntityToTrack).Value;
+                if (trackMode == EntityTrackingMode.RECIEVE)
+                {
+                    transform.position = entityManager.GetComponentData<Translation>(EntityToTrack).Value;
+                    transform.rotation = entityManager.GetComponentData<Rotation>(EntityToTrack).Value;
+                }
+                else if (trackMode == EntityTrackingMode.SEND)
+                {
+                    entityManager.SetComponentData(EntityToTrack, new Translation { Value = transform.position });
+		            entityManager.SetComponentData(EntityToTrack, new Rotation { Value = transform.rotation });
+                }
             }
             catch
             {

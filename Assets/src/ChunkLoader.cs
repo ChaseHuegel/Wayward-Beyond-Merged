@@ -101,6 +101,7 @@ namespace Swordfish
 						thisChunk.component = thisComponent;
 						thisComponent.chunk = thisChunk;
 						thisChunk.PrepareLoad();
+						thisComponent.BuildCollision();
 					}
 					else
 					{

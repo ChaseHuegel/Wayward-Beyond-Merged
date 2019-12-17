@@ -19,6 +19,22 @@ namespace Swordfish
         {
             baseInteractionRange = InteractionRange;
             cooldownTimer = new Timer(InteractCooldown);
+            PreInitialize();
+        }
+
+        public void Start()
+        {
+            Initialize();
+        }
+
+        public virtual void PreInitialize()
+        {
+
+        }
+
+        public virtual void Initialize()
+        {
+
         }
 
         public void TryHover(GameObject _interactor)

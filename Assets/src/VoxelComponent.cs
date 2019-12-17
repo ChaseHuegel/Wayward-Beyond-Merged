@@ -12,12 +12,16 @@ using Swordfish;
 
 public class VoxelComponent : MonoBehaviour
 {
-	public Unity.Entities.Entity entity;
-	public VoxelObject voxelObject;
-	public Vector3 pivotPoint;
+	public Unity.Entities.Entity entity = Unity.Entities.Entity.Null;
+	public VoxelObject voxelObject = null;
+	public Vector3 pivotPoint = Vector3.zero;
+
+	public bool seedFromName = true;
 
 	public bool initializeOnStart = false;
     public bool reinitialize = false;
+
+    public bool reload = false;
 
 	public bool physicsRebuildWaiting = false;
 	public bool buildPhysics = false;
@@ -42,15 +46,15 @@ public class VoxelComponent : MonoBehaviour
 
 	public VoxelObjectType type = VoxelObjectType.GENERIC;
 
-	private bool loaded = false;
-	private bool initialized = false;
+	public bool loaded = false;
+	public bool initialized = false;
 
 	public void Start()
 	{
 		if (initializeOnStart == true)
 		{
 			reinitialize = false;
-			Initialize();
+			Initialize(type);
 		}
 	}
 
@@ -159,10 +163,29 @@ public class VoxelComponent : MonoBehaviour
 		colliders.Dispose();
 	}
 
+	public void TagForReload()
+	{
+		loaded = false;
+		voxelObject.loaded = false;
+		for (int x = 0; x < sizeX; x++)
+		{
+			for (int z = 0; z < sizeZ; z++)
+			{
+				for (int y = sizeY - 1; y >= 0; y--)
+				{
+					ChunkLoader.instance.Queue(chunkComponents[x, y, z]);
+				}
+			}
+		}
+	}
+
 	public VoxelComponent Initialize(VoxelObjectType _type = VoxelObjectType.GENERIC)
 	{
-		CreateEntity();
-		this.GetComponent<EntityTracker>().SetReceivedEntity(entity);
+		if (entity == Unity.Entities.Entity.Null)
+		{
+			CreateEntity();
+			this.GetComponent<EntityTracker>().SetReceivedEntity(entity);
+		}
 
 		foreach (Transform child in transform)
 		{
@@ -187,6 +210,11 @@ public class VoxelComponent : MonoBehaviour
 
 		voxelObject.isStatic = isStatic;
 		voxelObject.setName(gameObject.name);
+
+		if (seedFromName == false)
+		{
+			voxelObject.setRandomSeed(voxelObject.getGUID().GetHashCode());
+		}
 
 		chunkObjects = new GameObject[sizeX, sizeY, sizeZ];
 		chunkComponents = new ChunkComponent[sizeX, sizeY, sizeZ];
@@ -256,6 +284,12 @@ public class VoxelComponent : MonoBehaviour
 		{
 			buildPhysics = false;
 			RebuildCollision();
+		}
+
+		if (reload == true)
+		{
+			reload = false;
+			TagForReload();
 		}
 
 		if (reinitialize == true)

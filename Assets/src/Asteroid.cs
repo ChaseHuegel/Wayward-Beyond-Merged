@@ -9,6 +9,7 @@ namespace Swordfish
 	public class Asteroid : VoxelObject
 	{
 		public Asteroid(int _sizeX = 1, int _sizeY = 1, int _sizeZ = 1, VoxelComponent _component = null) : base(_sizeX, _sizeY, _sizeZ, _component) {}
+		public Asteroid(int _sizeX, int _sizeY, int _sizeZ, VoxelComponent _component, Guid _guid) : base(_sizeX, _sizeY, _sizeZ, _component, _guid) {}
 
 		public float getDistance(int _x, int _y, int _z)
 		{
@@ -29,12 +30,31 @@ namespace Swordfish
 				int yPos = getRandom().Next((int)(_radius * 2)) - _radius;
 				int zPos = getRandom().Next((int)(_radius * 2)) - _radius;
 				Coord3D cutoutOrigin = new Coord3D( xPos, yPos, zPos );
-				int cutoutRadius = getRandom().Next(4, (int)(_radius * 0.8f));
+				int cutoutRadius = getRandom().Next(4, (int)(_radius * 0.6f));
 				cutoutRadius *= cutoutRadius;
 
 				cutoutOrigins[i] = cutoutOrigin;
 				cutoutRadiuses[i] = cutoutRadius;
 			}
+
+			Coord3D[] addOrigins = new Coord3D[_cutouts];
+			int[] addRadiuses = new int[_cutouts];
+			for (int i = 0; i < _cutouts; i++)
+			{
+				int xPos = getRandom().Next((int)(_radius * 2)) - _radius;
+				int yPos = getRandom().Next((int)(_radius * 2)) - _radius;
+				int zPos = getRandom().Next((int)(_radius * 2)) - _radius;
+				Coord3D cutoutOrigin = new Coord3D( xPos, yPos, zPos );
+				int cutoutRadius = getRandom().Next(4, (int)(_radius * 0.6f));
+				cutoutRadius *= cutoutRadius;
+
+				addOrigins[i] = cutoutOrigin;
+				addRadiuses[i] = cutoutRadius;
+			}
+
+			float xScale = ((float)getRandom().Next(30, 100)) / 100;
+			float yScale = ((float)getRandom().Next(30, 100)) / 100;
+			float zScale = ((float)getRandom().Next(30, 100)) / 100;
 
 			//	Distance filled sphere
 			for (int x = -_radius; x < _radius; x++)
@@ -43,7 +63,7 @@ namespace Swordfish
 				{
 					for (int z = -_radius; z < _radius; z++)
 					{
-						Coord3D coord = new Coord3D(x, y, z);
+						Coord3D coord = new Coord3D(x * xScale, y * yScale, z * zScale);
 						float distance = getDistance(x, y, z);
 						if (distance < radiusSquared)
 						{
@@ -59,7 +79,20 @@ namespace Swordfish
 								}
 							}
 
-							if (isCut == false) { coordinates.Add(coord); }
+							if (isCut == false)
+							{
+								for (int i = 0; i < _cutouts; i++)
+								{
+									float cutoutDistance = getDistance(x - addOrigins[i].x, y - addOrigins[i].y, z - addOrigins[i].z);
+									if (cutoutDistance < addRadiuses[i])
+									{
+										coordinates.Add(coord);
+										break;
+									}
+								}
+							}
+
+							// if (isCut == false) { coordinates.Add(coord); }
 						}
 					}
 				}
@@ -107,7 +140,7 @@ namespace Swordfish
 			this.setBlockAt(getBlockSizeX() / 2, getBlockSizeY() / 2, getBlockSizeZ() / 2, Voxel.VOID);
 
 			int radius = (int)( (getBlockSizeX() * 0.5f) * (getRandom().NextDouble() * (1.0f - 0.65f) + 0.65f) );
-			Coord3D[] points = Sphere( radius, 6 );
+			Coord3D[] points = GameMaster.Instance.voxelMaster.asteroidPresets[getRandom().Next(0, GameMaster.Instance.voxelMaster.asteroidPresets.Count)]; //Sphere( radius, 16 );
 
 			Voxel voxel = Voxel.ASTEROID_ROCK;
 			if (getRandom().NextDouble() <= 0.5d)

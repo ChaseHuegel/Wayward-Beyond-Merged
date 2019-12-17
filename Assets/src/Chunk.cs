@@ -425,6 +425,17 @@ namespace Swordfish
 			setRaw(toIndex(_x, _y, _z), _block);
 		}
 
+		public void setRawData(Block[] _blocks)
+		{
+			wipe();
+
+			for (int i = 0; i < _blocks.Length; i++)
+			{
+				Block thisBlock = _blocks[i];
+				setRaw(i, thisBlock);
+			}
+		}
+
 		public void wipe()
 		{
 			blocks 			= new Block[(Constants.CHUNK_SIZE * Constants.CHUNK_SIZE * Constants.CHUNK_SIZE)];
